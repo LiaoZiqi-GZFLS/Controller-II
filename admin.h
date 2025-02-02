@@ -1,4 +1,7 @@
-#include <WTypesbase.h>
+#include <windows.h>
+#include <shellapi.h>
+#include <iostream>
+#include <tchar.h>
 bool IsProcessRunAsAdmin()
 {
     SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;

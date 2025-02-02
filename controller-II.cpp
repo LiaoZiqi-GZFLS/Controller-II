@@ -6,29 +6,34 @@
 #include "color.h"
 #include "admin.h"
 
-// 设置控制台颜色的函数
-void SetConsoleColor(WORD color) {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE); // 获取控制台句柄
-    SetConsoleTextAttribute(hConsole, color); // 设置颜色
-}
-
 int main(int argc, char* argv[]){
     using namespace std;
+    colorDemo();
     if(!IsProcessRunAsAdmin()){
+        SetConsoleColor(GREEN);
+        printf("[User Mode]\n");
+        SetConsoleColor(LIGHT_GREEN);
+        printf("[User Mode]\n");
+    }else{
+        SetConsoleColor(RED);
+        printf("[Administrator  Mode]\n");
         SetConsoleColor(DEFAULT);
-        printf("Please run this programe with administrator privileges.\n");
     }
     if(argc==1){
         SetConsoleColor(DEFAULT);
-        printf("Controller (II) Version");
+        printf("Controller (II) [Version 1.2.0.0a]\n");
         SetConsoleColor(CYAN);
         printf("(c) Lazybones LZQ Corporation. ");
         SetConsoleColor(DEFAULT);
         printf("All rights reserved.\n");
     }else{
         SetConsoleColor(DEFAULT);
-        printf("Controller (II) running.");
+        
     }
-    system("pause");
+    SetConsoleColor(GREEN);
+    printf("Programe exited. ");
+    SetConsoleColor(DEFAULT);
+    printf("(Press any key to continue)\n");
+    system("pause>nul");
     return 0;
 }
