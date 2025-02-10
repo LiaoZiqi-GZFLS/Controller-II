@@ -6,9 +6,12 @@
 #include "color.h"
 #include "admin.h"
 #include "encoding.h"
+#include "environment.hpp"
+#include "cmdline/cmdline.h"
 #ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #endif
+#include <stdio.h>
 
 void setCmdEnv(){
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -17,9 +20,23 @@ void setCmdEnv(){
     dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     SetConsoleMode(hOut, dwMode);
     system("@echo off");
-    system("@chcp 65001>nul");
-    SetConsoleOutputCP(CP_UTF8);
-    SetConsoleCP(CP_UTF8);  
+    system("chcp");
+    if(GetACP()==65001){
+        system("@chcp 65001>nul");
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);  
+        system("echo UTF-8 Mode");
+    }else if(GetACP()==936){
+        system("@chcp 936>nul");
+        SetConsoleOutputCP(CP_ACP);
+        SetConsoleCP(CP_ACP);
+        system("echo GBK Mode");
+    }else{
+        system("@chcp 65001>nul");
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);  
+        system("echo UTF-8 Mode (Default)");
+    }
     system("@title Controller-II");
     return;
 }
@@ -62,6 +79,11 @@ int main(int argc, char* argv[]){
         printf("All rights reserved by (c) Lazybones LZQ Corporation. \n");
         SetConsoleColor(DEFAULT);
         printf("All rights reserved by author LiaoZiqi.\n\n");
+        /*---------Loading file---------*/
+        std::vector<std::string> validVars = {"DETECT_ENCODING", "DEBUG"};
+        EnvironmentConfig config1(validVars);
+        //EnvironmentConfig config2(validVars, "custom.ini");
+        bool DETECT_ENCODING = config1.getDETECT_ENCODING();
         /*------------------------------*/
         string line;
         string promts = "Controller-II> ";
@@ -73,8 +95,10 @@ int main(int argc, char* argv[]){
             //system(line.c_str());
             echo = executeCommand(line);
             cout<<echo<<endl;
-            cout<<detectEncoding(line)<<endl;
-            cout<<detectEncoding(echo)<<endl;
+            if(DETECT_ENCODING){
+                cout<<"Input: "<<endl<<detectEncoding(line);
+                cout<<"Output: "<<endl<<detectEncoding(echo);
+            }
             cout<<ANSI_RESET<<promts<<ANSI_RESET;
         }
         /*------------------------------*/

@@ -76,16 +76,22 @@ std::string detectEncoding(const std::string& str) {
     double gbkPercentage = gbkCount * 200 / total;
     double isoPercentage = static_cast<double>(isoCount) / total * 100;
 
+    std::string result = " ";
+
     // Determine encoding based on heuristics
     if (utf8Percentage > 5) {
-        return "UTF-8";
-    } else if (gbkPercentage > 5) {
-        return "GBK/GB2312";
-    } else if (isoPercentage > 5) {
-        return "ISO-8859-1";
-    } else {
-        return "ACSLL/Unknown";
+        result += "UTF-8 " + std::to_string(utf8Percentage) + "%\n";
     }
+    if (gbkPercentage > 5) {
+        result += "GBK/GB2312 " + std::to_string(gbkPercentage) + "%\n";
+    }
+    if (isoPercentage > 5) {
+        result +=  "ISO-8859-1 " + std::to_string(isoPercentage) + "%\n";
+    }
+    if(asciiPercentage > 5){
+        result += "ASCII " + std::to_string(asciiPercentage) + "%\n";
+    }
+    return (result==" "? " Unknown\n":result);
 }
 
 std::string GBKToUTF8(const std::string& gbkStr) {
