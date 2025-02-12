@@ -4,7 +4,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:\\OpenCV-MinGW-Build-OpenCV-4.5.2-x64\\include"
+                //"C:\\OpenCV-MinGW-Build-OpenCV-4.5.2-x64\\include"
             ],
             "defines": [
                 "_DEBUG",

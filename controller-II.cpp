@@ -62,6 +62,7 @@ std::string executeCommand(const std::string& cmd) {
 
 int main(int argc, char* argv[]){
     using namespace std;
+    bool IOmood = true;
     if(argc==1){
         system("cls");
         setCmdEnv();
@@ -90,16 +91,19 @@ int main(int argc, char* argv[]){
         string echo;
         cout<<ANSI_RESET<<promts<<ANSI_RESET;
         while(getline(cin,line)){
-            //cout<<ANSI_RESET<<line<<ANSI_RESET<<endl;
-            //line = "cmd /c \"" + line + "\"";
-            //system(line.c_str());
-            echo = executeCommand(line);
-            cout<<echo<<endl;
-            if(DETECT_ENCODING){
-                cout<<"Input: "<<endl<<detectEncoding(line);
-                cout<<"Output: "<<endl<<detectEncoding(echo);
+            if(IOmood){
+                cout<<ANSI_RESET<<line<<ANSI_RESET<<endl;
+                line = "cmd /c \"" + line + "\"";
+                system(line.c_str());
+            }else{
+                echo = executeCommand(line);
+                cout<<echo<<endl;
+                if(DETECT_ENCODING){
+                    cout<<"Input: "<<endl<<detectEncoding(line);
+                    cout<<"Output: "<<endl<<detectEncoding(echo);
+                }
+                cout<<ANSI_RESET<<promts<<ANSI_RESET;
             }
-            cout<<ANSI_RESET<<promts<<ANSI_RESET;
         }
         /*------------------------------*/
         SetConsoleColor(GREEN);
