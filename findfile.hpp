@@ -10,6 +10,7 @@ enum class FileAction {
     List,    // 仅列出文件
     Copy,    // 复制文件
     Move,    // 移动文件
+    Rename,  // 重命名文件
     Delete   // 删除文件
 };
 
@@ -51,11 +52,60 @@ bool create_directories(const std::wstring& path) {
     return true;
 }
 
+// 批量重命名文件
+void batch_rename(
+    std::vector<std::wstring>& files,
+    const std::wstring& pattern,
+    const std::wstring& replacement,
+    bool use_regex
+) {
+    std::wregex re;
+    try {
+        std::wstring regex_pattern = use_regex ? 
+            pattern : wildcard_to_regex(pattern);
+        re.assign(regex_pattern);
+    } catch (const std::regex_error& e) {
+        std::wcerr << L"正则表达式错误: " << e.what() << std::endl;
+        return;
+    }
+
+    for (auto& file : files) {
+        // 提取目录和原文件名
+        size_t pos = file.find_last_of(L"\\/");
+        if (pos == std::wstring::npos) continue;
+
+        std::wstring dir = file.substr(0, pos);
+        std::wstring filename = file.substr(pos + 1);
+
+        // 执行替换操作
+        std::wstring new_name = std::regex_replace(filename, re, replacement);
+        std::wstring new_path = dir + L"\\" + new_name;
+
+        // 跳过同名文件
+        if (new_path == file) continue;
+
+        // 执行重命名
+        if (!MoveFileW(file.c_str(), new_path.c_str())) {
+            DWORD err = GetLastError();
+            if (err == ERROR_ALREADY_EXISTS) {
+                std::wcerr << L"目标文件已存在: " << new_path << std::endl;
+            } else {
+                std::wcerr << L"重命名失败: " << file << L" => " << new_path 
+                          << L" (错误码: " << err << L")" << std::endl;
+            }
+        } else {
+            file = new_path; // 更新文件列表
+        }
+    }
+}
+
 // 文件处理核心函数
 void process_files(
     const std::vector<std::wstring>& files,
     FileAction action,
-    const std::wstring& target_dir = L""
+    const std::wstring& target_dir = L"",
+    const std::wstring& pattern = L"",
+    bool use_regex = false
 ) {
     for (const auto& file : files) {
         switch (action) {
@@ -85,11 +135,28 @@ void process_files(
                 break;
             }
 
+            // 在process_files函数中添加移动处理
             case FileAction::Move: {
-                std::wstring target = target_dir + L"\\" + file.substr(file.find_last_of(L"\\/") + 1);
-                if (!MoveFileExW(file.c_str(), target.c_str(), MOVEFILE_REPLACE_EXISTING)) {
-                    // 错误处理
+                size_t pos = file.find_last_of(L"\\/");
+                std::wstring filename = (pos != std::wstring::npos) ? 
+                    file.substr(pos + 1) : file;
+                std::wstring target = target_dir + L"\\" + filename;
+
+                if (!create_directories(target_dir)) {
+                    std::wcerr << L"目录创建失败: " << target_dir << std::endl;
+                    continue;
                 }
+
+                DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
+                if (!MoveFileExW(file.c_str(), target.c_str(), flags)) {
+                    std::wcerr << L"移动失败: " << file << L" => " << target 
+                            << L" (错误码: " << GetLastError() << L")" << std::endl;
+                }
+                break;
+            }
+
+            case FileAction::Rename: {
+                batch_rename(const_cast<std::vector<std::wstring>&>(files),  target_dir, pattern, use_regex);
                 break;
             }
 
@@ -187,14 +254,28 @@ std::unique_ptr<FileTreeNode> build_file_tree(
     return node;
 }
 
-// 示例用法
-int main() {
-    // 1. 文件搜索示例
-    std::vector<std::wstring> files;
-    find_files_recursive(L"D:\\project\\Controller-II", L".*\\.txt", true, true, files);
-    process_files(files, FileAction::List, L"");
+void search_file_tree(
+    const std::unique_ptr<FileTreeNode>& node,  // 当前节点
+    const std::wstring& pattern,               // 匹配模式
+    bool use_regex,                            // 是否使用正则表达式
+    std::vector<std::wstring>& results         // 搜索结果
+) {
+    if (!node) return;
 
-    // 2. 文件树示例
-    auto file_tree = build_file_tree(L"D:\\project\\Controller-II", true);
-    return 0;
+    // 如果是文件则进行匹配
+    if (!node->is_directory) {
+        std::wstring filename = node->path.substr(node->path.find_last_of(L"\\/") + 1);
+        std::wstring regex_pattern = use_regex ? pattern : wildcard_to_regex(pattern);
+        std::wregex re(regex_pattern, std::regex::icase);
+
+        if (std::regex_match(filename, re)) {
+            results.push_back(node->path);
+        }
+    }
+
+    // 递归搜索子节点
+    for (const auto& child : node->children) {
+        search_file_tree(child, pattern, use_regex, results);
+    }
 }
+

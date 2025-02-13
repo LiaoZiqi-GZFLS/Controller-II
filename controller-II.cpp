@@ -7,6 +7,7 @@
 #include "admin.h"
 #include "encoding.h"
 #include "environment.hpp"
+#include "findfile.hpp"
 #include "cmdline/cmdline.h"
 #ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
@@ -75,6 +76,7 @@ int main(int argc, char* argv[]){
     using namespace std;
     bool IOmod = true;
     bool DETECT_ENCODING = false;
+    auto file_tree = NULL
     if(argc==1){
         system("cls");
         setCmdEnv();
@@ -178,6 +180,12 @@ int main(int argc, char* argv[]){
         a.add("play", '\0', "play the ascii art");
         a.add<string>("video", '\0', "video path", false, "");
         a.add<string>("audio", '\0', "audio path", false, "");
+        a.add("version", 'v', "show version");
+        a.add<wstring>("findfile", 'f', "find file");
+        a.add<wstring>("pattern", 'p', "pattern of file");
+        a.add("recursive", 'r', "enable recursive search");
+        a.add("regex", 'e', "use regex pattern");
+        a.add<wstring>("build", 'b', "build file tree");
         a.parse_check(argc, argv);
         if(a.exist("play")){
             system("cls");
@@ -189,6 +197,35 @@ int main(int argc, char* argv[]){
                 a_arg += "-a" + a.get<string>("audio");
             }
             system(a_arg.c_str());
+        }
+        if(a.exist("admin")){
+            if(!IsProcessRunAsAdmin()){
+                SetConsoleColor(RED);
+                printf("Requesting for administrator privilege...\n");
+                SetConsoleColor(DEFAULT);
+                GetAdmin(NULL, SW_SHOWNORMAL);
+            }else{
+                SetConsoleColor(GREEN);
+                printf("Already in administrator mode.\n");
+                SetConsoleColor(DEFAULT);
+            }
+        }
+        if(a.exist("help")){
+            cout<<a.usage();
+        }
+        if(a.exist("version")){
+            cout<<"Controller-II [Version 1.2.0.0a]"<<endl;
+            cout<<"All rights reserved by (c) Lazybones LZQ Corporation."<<endl;
+            cout<<"All rights reserved by author LiaoZiqi."<<endl;
+        }
+        if(a.exist("findfile")){
+            if(!a.exist("pattern")){
+                cout<<"Loss: [-p]."<<endl<<"Please input the pattern of file."<<endl;
+                return 0;
+            }
+            std::vector<std::wstring> files;
+            find_files_recursive(a.get<wstring>("findfile"), a.get<wstring>("pattern"), a.exist("recursive"), a.exist("regex"), files);
+            process_files(files, FileAction::List, L"");
         }
     }
     return 0;
