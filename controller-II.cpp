@@ -60,9 +60,21 @@ std::string executeCommand(const std::string& cmd) {
     return result;
 }
 
+void getConfig(bool &DETECT_ENCODING, bool &IOmod){
+    // 定义有效的配置变量
+    std::vector<std::string> validVars = {"DETECT_ENCODING", "IOmod","DEBUG"};
+    // 创建配置管理对象，使用默认文件名 "con2.ini"
+    EnvironmentConfig config(validVars);
+    //EnvironmentConfig config2(validVars, "custom.ini");
+    // 获取值
+    DETECT_ENCODING = config.getDETECT_ENCODING();
+    IOmod = config.getIOmod();
+}
+
 int main(int argc, char* argv[]){
     using namespace std;
-    bool IOmood = true;
+    bool IOmod = true;
+    bool DETECT_ENCODING = false;
     if(argc==1){
         system("cls");
         setCmdEnv();
@@ -81,20 +93,62 @@ int main(int argc, char* argv[]){
         SetConsoleColor(DEFAULT);
         printf("All rights reserved by author LiaoZiqi.\n\n");
         /*---------Loading file---------*/
-        std::vector<std::string> validVars = {"DETECT_ENCODING", "DEBUG"};
-        EnvironmentConfig config1(validVars);
-        //EnvironmentConfig config2(validVars, "custom.ini");
-        bool DETECT_ENCODING = config1.getDETECT_ENCODING();
+        getConfig(DETECT_ENCODING, IOmod);
         /*------------------------------*/
         string line;
         string promts = "Controller-II> ";
         string echo;
         cout<<ANSI_RESET<<promts<<ANSI_RESET;
         while(getline(cin,line)){
-            if(IOmood){
+            if(line=="admin"){
+                if(!IsProcessRunAsAdmin()){
+                    SetConsoleColor(RED);
+                    printf("Requesting for administrator privilege...\n");
+                    SetConsoleColor(DEFAULT);
+                    GetAdmin(NULL, SW_SHOWNORMAL);
+                }else{
+                    SetConsoleColor(GREEN);
+                    printf("Already in administrator mode.\n");
+                    SetConsoleColor(DEFAULT);
+                }
+                cout<<ANSI_RESET<<promts<<ANSI_RESET;
+                continue;
+            }
+            if(line=="exit"){
+                cout<<ANSI_RESET<<promts<<ANSI_RESET;
+                break;
+            }
+            if(line=="help"){
+                cout<<"exit: Exit the program"<<endl;
+                cout<<"help: Show this help message"<<endl;
+                cout<<"echo: Echo the input"<<endl;
+                cout<<"cls: Clear the screen"<<endl;
+                cout<<"color: Change the color of the console"<<endl;
+                cout<<ANSI_RESET<<promts<<ANSI_RESET;
+                continue;
+            }
+            if(line=="play"){
+                string a_arg = "cmd /c preDecoding.exe ";
+                string line2;
+                cout<<ANSI_RESET<<"Please input the video path: "<<ANSI_RESET;
+                getline(cin,line2);
+                if(line2!=""){
+                    a_arg += "-v " + line2;
+                }
+                cout<<ANSI_RESET<<"Please input the audio path: "<<ANSI_RESET;
+                getline(cin,line2);
+                if(line2!=""){
+                    a_arg += "-a " + line2;
+                }
+                system(a_arg.c_str());
+                cout<<ANSI_RESET<<promts<<ANSI_RESET;
+                continue;
+            }
+            if(IOmod){
                 cout<<ANSI_RESET<<line<<ANSI_RESET<<endl;
                 line = "cmd /c \"" + line + "\"";
                 system(line.c_str());
+                cout<<ANSI_RESET<<promts<<ANSI_RESET;
             }else{
                 echo = executeCommand(line);
                 cout<<echo<<endl;
@@ -104,6 +158,7 @@ int main(int argc, char* argv[]){
                 }
                 cout<<ANSI_RESET<<promts<<ANSI_RESET;
             }
+            
         }
         /*------------------------------*/
         SetConsoleColor(GREEN);
@@ -113,7 +168,28 @@ int main(int argc, char* argv[]){
         system("pause>nul");
     }else{
         SetConsoleColor(DEFAULT);
-        
+        cmdline::parser a;
+        //a.add<string>("host", 'h', "host name", true, "");
+        //a.add<int>("port", 'p', "port number", false, 80, cmdline::range(1, 65535));
+        //a.add<string>("type", 't', "protocol type", false, "http", cmdline::oneof<string>("http", "https", "ssh", "ftp"));
+        //a.add("gzip", '\0', "gzip when transfer");
+        a.add("admin", 'a', "request for administrator privilege");
+        a.add("help", 0, "print this message");
+        a.add("play", '\0', "play the ascii art");
+        a.add<string>("video", '\0', "video path", false, "");
+        a.add<string>("audio", '\0', "audio path", false, "");
+        a.parse_check(argc, argv);
+        if(a.exist("play")){
+            system("cls");
+            string a_arg = "cmd /c preDecoding.exe ";
+            if(a.exist("video")){
+                a_arg += "-v " + a.get<string>("video");
+            }
+            if(a.exist("audio")){
+                a_arg += "-a" + a.get<string>("audio");
+            }
+            system(a_arg.c_str());
+        }
     }
     return 0;
 }

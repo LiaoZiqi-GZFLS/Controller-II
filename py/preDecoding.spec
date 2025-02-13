@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['preDecoding.py'],
+    ['D:\\project\\Controller-II\\py\\preDecoding.py'],
     pathex=[],
     binaries=[],
     datas=[],

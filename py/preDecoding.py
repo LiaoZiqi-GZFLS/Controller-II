@@ -1,3 +1,4 @@
+import argparse
 import cv2
 import numpy as np
 import shutil
@@ -42,6 +43,14 @@ def main():
     #audio_path = 'media/miku_10o.mp3'
     #video_path = 'media/rabbit_hole.mp4'
     #audio_path = 'media/rabbit_hole.mp3'
+
+    parser = argparse.ArgumentParser(description="Play ASCII art.")
+    parser.add_argument("-v","--video", help="Input path of video", default='media/badapple.mp4')
+    parser.add_argument("-a","--audio", help="Input path of audio", default='media/badapple.mp3')
+    args = parser.parse_args()
+
+    video_path = args.video
+    audio_path = args.audio
     
     if not os.path.exists(video_path) or not os.path.exists(audio_path):
         print("视频或音频文件不存在！")
@@ -101,7 +110,7 @@ def main():
         print("\n播放已终止")
     finally:
         cap.release()
-        print(f"所有帧已保存到 {output_dir} 目录")
+        #print(f"所有帧已保存到 {output_dir} 目录")
 
 if __name__ == "__main__":
     main()

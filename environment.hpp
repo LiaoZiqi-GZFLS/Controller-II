@@ -9,7 +9,7 @@
 class EnvironmentConfig {
 private:
     std::vector<std::string> validVars;
-    bool DETECT_ENCODING;
+    bool DETECT_ENCODING, IOmod, DEBUG;
 
     bool fileExists(const std::string& filename) {
         std::ifstream file(filename);
@@ -54,6 +54,15 @@ private:
                     DETECT_ENCODING = true;
                 } else if (value == "False") {
                     DETECT_ENCODING = false;
+                } else {
+                    std::cout << "warring::error &jumping invalid value::[" << value << "] - " << std::endl;
+                }
+            }
+            if (varName == "IOmod") {
+                if (value == "True") {
+                    IOmod = true;
+                } else if (value == "False") {
+                    IOmod = false;
                 } else {
                     std::cout << "warring::error &jumping invalid value::[" << value << "] - " << std::endl;
                 }
@@ -111,13 +120,6 @@ public:
             return;
         }
 
-        // 将内容写回文件
-        std::ofstream outFile(filename);
-        for (const std::string& l : lines) {
-            outFile << l << std::endl;
-        }
-        outFile.close();
-
         // 更新内存中的值
         if (varName == "DETECT_ENCODING") {
             if (newValue == "True") {
@@ -126,13 +128,34 @@ public:
                 DETECT_ENCODING = false;
             } else {
                 std::cout << "警告：无效的值 - " << newValue << "，内存中值未更新" << std::endl;
+                return;
             }
         }
+        if (varName == "IOmod") {
+            if (newValue == "True") {
+                IOmod = true;
+            } else if (newValue == "False") {
+                IOmod = false;
+            } else {
+                std::cout << "警告：无效的值 - " << newValue << "，内存中值未更新" << std::endl;
+                return;
+            }
+        }
+
+        // 将内容写回文件
+        std::ofstream outFile(filename);
+        for (const std::string& l : lines) {
+            outFile << l << std::endl;
+        }
+        outFile.close();
     }
 
     // 获取变量值
     bool getDETECT_ENCODING() const {
         return DETECT_ENCODING;
+    }
+    bool getIOmod() const {
+        return IOmod;
     }
 };
 
