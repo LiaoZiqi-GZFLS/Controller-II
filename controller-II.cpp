@@ -126,6 +126,8 @@ int main(int argc, char* argv[]){
                 cout<<"echo: Echo the input"<<endl;
                 cout<<"cls: Clear the screen"<<endl;
                 cout<<"color: Change the color of the console"<<endl;
+                cout<<"admin: Request for administrator privilege"<<endl;
+                cout<<"play: Play the ascii art"<<endl;
                 cout<<ANSI_RESET<<promts<<ANSI_RESET;
                 continue;
             }
