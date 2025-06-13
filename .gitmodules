@@ -1,3 +1,9 @@
 [submodule "opencv"]
 	path = opencv
 	url = https://github.com/opencv/opencv.git
+[submodule "cmdline"]
+	path = cmdline
+	url = https://github.com/LiaoZiqi-GZFLS/cmdline
+[submodule "cpp-linenoise"]
+	path = cpp-linenoise
+	url = https://github.com/LiaoZiqi-GZFLS/cpp-linenoise
